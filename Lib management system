@@ -1,0 +1,119 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+struct Book {
+ int id;
+ char title[50];
+ char author[50];
+};
+void addBook();
+void viewBooks();
+void searchBook();
+void deleteBook();
+int main() {
+ int choice;
+ while (1) {
+ printf("\n======== LIBRARY MENU ========\n");
+ printf("1. Add Book\n");
+ printf("2. View All Books\n");
+ printf("3. Search Book\n");
+ printf("4. Delete Book\n");
+ printf("5. Exit\n");
+ printf("Enter your choice: ");
+ scanf("%d", &choice);
+ switch (choice) {
+ case 1: addBook(); break;
+ case 2: viewBooks(); break;
+ case 3: searchBook(); break;
+ case 4: deleteBook(); break;
+ case 5: printf("Library System exited successfully.\nThank you!!\n"); return 0;
+ default: printf("Invalid Choice!\n");
+ }
+}
+}
+void addBook() {
+ struct Book b;
+ FILE *fp = fopen("library.txt", "a");
+ if (!fp) {
+ printf("File error!\n");
+ return;
+ }
+ printf("\n--- ADD BOOK ---\n");
+ printf("Enter Book ID: ");
+ scanf("%d", &b.id);
+ getchar();
+ printf("Enter Title: ");
+ fgets(b.title, sizeof(b.title), stdin);
+ b.title[strcspn(b.title, "\n")] = '\0';
+ printf("Enter Author: ");
+ fgets(b.author, sizeof(b.author), stdin);
+ b.author[strcspn(b.author, "\n")] = '\0';
+ fprintf(fp, "%d|%s|%s\n", b.id, b.title, b.author);
+ fclose(fp);
+ printf("Book Added Successfully!\n");
+}
+void viewBooks() {
+ struct Book b;
+ FILE *fp = fopen("library.txt", "r");
+ if (!fp) {
+ printf("No records found!\n");
+ return;
+ }
+ printf("\n--- ALL BOOKS ---\n");
+ while (fscanf(fp, "%d|%49[^|]|%49[^\n]\n", &b.id, b.title, b.author) == 3) {
+ printf("\nBook ID : %d", b.id);
+ printf("\nTitle : %s", b.title);
+ printf("\nAuthor : %s\n", b.author);
+ }
+ fclose(fp);
+}
+void searchBook() {
+ struct Book b;
+ int id, found = 0;
+ FILE *fp = fopen("library.txt", "r");
+ if (!fp) {
+ printf("No records available.\n");
+ return;
+ }
+ printf("Enter Book ID to Search: ");
+ scanf("%d", &id);
+ while (fscanf(fp, "%d|%49[^|]|%49[^\n]\n", &b.id, b.title, b.author) == 3) {
+ if (b.id == id) {
+ printf("\n--- BOOK FOUND ---\n");
+ printf("Book ID : %d\nTitle : %s\nAuthor : %s\n", b.id, b.title, b.author);
+ found = 1;
+ break;
+ }
+ }
+ fclose(fp);
+ if (!found)
+ printf("Book Not Found!\n");
+}
+void deleteBook() {
+ struct Book b;
+ int id, found = 0, count = 0;
+ FILE *fp = fopen("library.txt", "r");
+ FILE *temp = fopen("temp.txt", "w");
+ if (!fp || !temp) {
+ printf("File error!\n");
+ return;
+ }
+ printf("Enter Book ID to Delete: ");
+ scanf("%d", &id);
+ while (fscanf(fp, "%d|%49[^|]|%49[^\n]\n", &b.id, b.title, b.author) == 3) {
+ if (b.id == id) {
+ found = 1;
+ continue;
+ }
+ fprintf(temp, "%d|%s|%s\n", b.id, b.title, b.author);
+ count++;
+ }
+ fclose(fp);
+ fclose(temp);
+ remove("library.txt");
+ rename("temp.txt", "library.txt");
+ if (found)
+ printf("Book Deleted Successfully!\n");
+ else
+ printf("Book Not Found!\n");
+}
